@@ -515,7 +515,6 @@ class DQNLearning:
         self.q_was_pressed = False
         self.x_was_pressed = False
         total_reward = 0
-        prob = (1 - epsilon + (epsilon / self.env.action_space_size)) * 100
         for i in range(num_of_times):
             self.env.reset()
             step_count = 0
@@ -526,14 +525,12 @@ class DQNLearning:
                         break
                     state = self.env.get_current_state()
                     state_list = [state]
-                    rand = random.randint(0, 100)
-                    if rand < prob:
-                        max_action_number = agent.policy(state_list)
-                    else:
-                        temp_action = agent.random_action_minus_max(state_list)
-                        max_action_number = convert_action_into_number(temp_action)
+
+                    max_action_number = agent.policy(state_list)
                     action = convert_number_into_action(max_action_number)
+
                     next_state, reward, temp_done = self.env.step(action)
+
                     print("\tstep #" + str(step_count) + " " + str(action) + " " + str(reward))
                     total_reward += reward
                     step_count += 1
