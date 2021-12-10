@@ -656,11 +656,14 @@ class DQNLearning:
 
     def evaluate(self, agent, num_of_times, epsilon=0.1):
         total_reward = 0
+        total_score = 0
+        score_list = []
         for i in range(num_of_times):
             self.q_was_pressed = False
             self.x_was_pressed = False
             self.env.reset()
             step_count = 0
+            temp_score = 0
             while not self.env.get_terminal_state():
                 self.env.render()
                 if self.space_was_pressed():
@@ -671,9 +674,43 @@ class DQNLearning:
                     max_action_number = agent.policy(state_list, debug=True)
                     action = convert_number_into_action(max_action_number)
                     next_state, reward, temp_done = self.env.step(action)
-                    print("\tstep #" + str(step_count) + " " + " " + str(action) + " " + str(reward))
+                    print("\tstep #" + str(step_count) + " " + " " + str(action) + " " + str(reward) + " Score: " +
+                          str(self.env.score))
                     total_reward += reward
+                    total_score += self.env.score
                     step_count += 1
+                    temp_score = self.env.score
+            print("Score on this episode: " + str(temp_score))
+            score_list.append(temp_score)
+        time.sleep(5)
+        plt.plot(score_list)
+        plt.show()
+        return total_reward / num_of_times
+
+    def auto_evaluate(self, agent, num_of_times, epsilon=0.1):
+        total_reward = 0
+        total_score = 0
+        score_list = []
+        for i in range(num_of_times):
+            self.q_was_pressed = False
+            self.x_was_pressed = False
+            self.env.reset()
+            step_count = 0
+            temp_score = 0
+            while not self.env.get_terminal_state():
+                state = self.env.get_current_state()
+                state_list = [state]
+                max_action_number = agent.policy(state_list, debug=False)
+                action = convert_number_into_action(max_action_number)
+                next_state, reward, temp_done = self.env.step(action)
+                total_reward += reward
+                total_score += self.env.score
+                step_count += 1
+                temp_score = self.env.score
+            score_list.append(temp_score)
+        time.sleep(0.1)
+        plt.plot(score_list)
+        plt.show()
         return total_reward / num_of_times
 
     def space_was_pressed(self):
