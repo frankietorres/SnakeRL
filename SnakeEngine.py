@@ -34,12 +34,115 @@ class SnakeEngine:
         self.grid_array[self.player_pos_list[0][0]][self.player_pos_list[0][1]] = 4
 
     def run_game_in_real_time(self):
+        temp_states = []
+        temp_actions = []
+        temp_rewards = []
+        temp_next_states = []
         while self.snake_alive:
             if not self.apple_spawned:
                 self.spawn_apple_randomly()
-            self.display.draw_grid(self.grid_array, self.current_state)
-            self.event_handler()
+            self.display.draw_grid(self.grid_array)
+            temp_states.append(np.copy(self.grid_array))
+            temp_actions.append(self.event_handler())
+            temp_rewards.append(self.current_reward)
+            temp_next_states.append(np.copy(self.grid_array))
         print("Game Over!\nFinal Score was: " + str(self.score))
+
+        return temp_states, temp_actions, temp_rewards, temp_next_states
+
+    def get_current_twelve_int_boolean_state(self):
+        temp_list = []
+
+        player_pos_x = self.player_pos_list[0][0]
+        player_pos_y = self.player_pos_list[0][1]
+        apple_pos_x = self.apple_pos[0]
+        apple_pos_y = self.apple_pos[1]
+
+        # apple above
+        if apple_pos_y > player_pos_y:
+            temp_list.append(1)
+        elif apple_pos_y <= player_pos_y:
+            temp_list.append(0)
+
+        # apple below
+        if apple_pos_y < player_pos_y:
+            temp_list.append(1)
+        elif apple_pos_y >= player_pos_y:
+            temp_list.append(0)
+
+        # apple left
+        if apple_pos_x < player_pos_x:
+            temp_list.append(1)
+        elif apple_pos_x >= player_pos_x:
+            temp_list.append(0)
+
+        # apple left
+        if apple_pos_x > player_pos_x:
+            temp_list.append(1)
+        elif apple_pos_x <= player_pos_x:
+            temp_list.append(0)
+
+        # wall up
+        if player_pos_y - 1 <= 0:
+            temp_list.append(1)
+        elif self.grid_array[player_pos_x][player_pos_y - 1] == 1:
+            temp_list.append(1)
+        else:
+            temp_list.append(0)
+
+        # wall down
+        if player_pos_y + 1 >= 10:
+            temp_list.append(1)
+        elif self.grid_array[player_pos_x][player_pos_y + 1] == 1:
+            temp_list.append(1)
+        else:
+            temp_list.append(0)
+
+        # wall left
+        if player_pos_x - 1 <= 0:
+            temp_list.append(1)
+        elif self.grid_array[player_pos_x - 1][player_pos_y] == 1:
+            temp_list.append(1)
+        else:
+            temp_list.append(0)
+
+        # wall right
+        if player_pos_x + 1 >= 10:
+            temp_list.append(1)
+        elif self.grid_array[player_pos_x + 1][player_pos_y] == 1:
+            temp_list.append(1)
+        else:
+            temp_list.append(0)
+
+        # get position difference to see how snake is facing
+        position_difference = (self.player_pos_list[0][0] - self.player_pos_list[1][0],
+                               self.player_pos_list[0][1] - self.player_pos_list[1][1])
+
+        # snake facing up
+        if position_difference == (0, -1):
+            temp_list.append(1)
+        else:
+            temp_list.append(0)
+
+        # snake facing down
+        if position_difference == (0, 1):
+            temp_list.append(1)
+        else:
+            temp_list.append(0)
+
+        # snake facing left
+        if position_difference == (-1, 0):
+            temp_list.append(1)
+        else:
+            temp_list.append(0)
+
+        # snake facing right
+        if position_difference == (1, 0):
+            temp_list.append(1)
+        else:
+            temp_list.append(0)
+
+        return temp_list
 
     def run_game_using_policy(self, q_table, n_times):
         print("Optimal demo is ready to run. Press Space to step through an episode.")
@@ -51,7 +154,7 @@ class SnakeEngine:
             while self.snake_alive:
                 if not self.apple_spawned:
                     self.spawn_apple_randomly()
-                self.display.draw_grid(self.grid_array, self.current_state)
+                self.display.draw_grid(self.grid_array)
 
                 if self.space_was_pressed():
                     self.current_state = self.get_current_twelve_boolean_state()
@@ -170,13 +273,13 @@ class SnakeEngine:
         self.current_state = self.get_current_twelve_boolean_state()
         self.score = 0
         if display_on:
-            self.display.draw_grid(self.grid_array, self.current_state)
+            self.display.draw_grid(self.grid_array)
 
     def refresh_after_step(self, display_on):
         if not self.apple_spawned:
             self.spawn_apple_randomly()
         if display_on:
-            self.display.draw_grid(self.grid_array, self.current_state)
+            self.display.draw_grid(self.grid_array)
 
     def get_current_twelve_boolean_state(self):
         temp_string = ""
@@ -272,22 +375,32 @@ class SnakeEngine:
         return temp_string
 
     def event_handler(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
+        button_pushed = False
+        while not button_pushed:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
 
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RIGHT:
-                    self.move_player_step('right')
-                elif event.key == pygame.K_LEFT:
-                    self.move_player_step('left')
-                elif event.key == pygame.K_UP:
-                    self.move_player_step('up')
-                elif event.key == pygame.K_DOWN:
-                    self.move_player_step('down')
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RIGHT:
+                        self.move_player_step('right')
+                        button_pushed = True
+                        return 'right'
+                    elif event.key == pygame.K_LEFT:
+                        self.move_player_step('left')
+                        button_pushed = True
+                        return 'left'
+                    elif event.key == pygame.K_UP:
+                        self.move_player_step('up')
+                        button_pushed = True
+                        return 'up'
+                    elif event.key == pygame.K_DOWN:
+                        self.move_player_step('down')
+                        button_pushed = True
+                        return 'down'
 
     def space_was_pressed(self):
-        self.display.draw_grid(self.grid_array, self.current_state)
+        self.display.draw_grid(self.grid_array)
         button_pressed = False
         while not button_pressed:
             for event in pygame.event.get():
