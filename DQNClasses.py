@@ -504,9 +504,10 @@ class DQNLearning:
                 else:
                     current_episode_count += 1
                     improvement_score = total_reward / step_count
-                    print("\tEpisode " + str(current_episode_count) + " finished\tSteps: " + str(step_count)
-                          + "\tTotal Reward: " + str(total_reward) + "\tPolicy Used: " +
-                          str((policy_used / step_count) * 100) + "%\tImprovement Score: " + str(improvement_score))
+                    if current_episode_count % 100 == 0:
+                        print("\tEpisode " + str(current_episode_count) + " finished\tSteps: " + str(step_count)
+                              + "\tTotal Reward: " + str(total_reward) + "\tPolicy Used: " +
+                              str((policy_used / step_count) * 100) + "%\tImprovement Score: " + str(improvement_score))
                     list_of_rewards.append(total_reward)
                     avg_rewards.append(total_reward / current_episode_count)
 
@@ -657,7 +658,6 @@ class DQNLearning:
     def evaluate(self, agent, num_of_times, epsilon=0.1):
         total_reward = 0
         total_score = 0
-        score_list = []
         for i in range(num_of_times):
             self.q_was_pressed = False
             self.x_was_pressed = False
@@ -681,10 +681,6 @@ class DQNLearning:
                     step_count += 1
                     temp_score = self.env.score
             print("Score on this episode: " + str(temp_score))
-            score_list.append(temp_score)
-        time.sleep(5)
-        plt.plot(score_list)
-        plt.show()
         return total_reward / num_of_times
 
     def auto_evaluate(self, agent, num_of_times, epsilon=0.1):
