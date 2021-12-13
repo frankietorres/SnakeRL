@@ -13,9 +13,9 @@ temp_learn = DQNLearning(env=env,
                          min_batch_size=500,
                          max_batch_size=-1,
                          epsilon=0.1,
-                         load_model=False,
+                         load_model=True,
                          fit_on_step=2,
-                         train=True,
+                         train=False,
                          save_model=True,
                          show_graphs=True)
 

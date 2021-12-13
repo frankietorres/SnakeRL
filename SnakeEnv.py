@@ -297,5 +297,13 @@ class SnakeEnv:
         return not self.snake_alive
 
     def render(self):
-        self.display.draw_grid(self.grid_array)
+        self.display.draw_grid(self.grid_array,
+                               state_string=self.convert_list_to_string(self.get_current_twelve_boolean_state()))
 
+    def convert_list_to_string(self, list_to_be_converted):
+        temp_str = ""
+
+        for item in list_to_be_converted:
+            temp_str += str(item)
+
+        return temp_str
