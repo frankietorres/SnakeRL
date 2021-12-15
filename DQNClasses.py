@@ -431,6 +431,7 @@ class DQNLearning:
             avg_rewards = []
             list_of_rewards = []
             list_of_scores = []
+            optimal_score_list = []
 
             improvement_score = 0
             previous_improvement_score = 0
@@ -486,9 +487,6 @@ class DQNLearning:
                     if step_count % 1000 == 0:
                         print("\tWARNING 1000 steps reached, stopping training")
                         break
-
-                    if step_count % 100 == 0:
-                        print("\tWARNING multiple of 100 steps!")
                     if step_count % 500 == 0:
                         print("\tWARNING 500 steps reached, stopping training")
                         break
@@ -514,6 +512,9 @@ class DQNLearning:
                     list_of_rewards.append(total_reward)
                     avg_rewards.append(total_reward / current_episode_count)
 
+                    if current_episode_count % 10 == 0:
+                        optimal_score_list.append(self.auto_evaluate(agent, num_of_times=1))
+
                     if improvement_score == previous_improvement_score:
                         improvement_stayed_the_same += 1
                     else:
@@ -530,13 +531,13 @@ class DQNLearning:
             print("\tReplay Buffer Size: " + str(replay.get_size_of_replay_buffer()))
 
             if self.show_graphs:
-                if len(avg_rewards) > 0:
-                    plt.plot(avg_rewards)
-                    plt.show()
-
-                if len(list_of_rewards) > 0:
-                    plt.plot(list_of_rewards)
-                    plt.show()
+                # if len(avg_rewards) > 0:
+                #     plt.plot(avg_rewards)
+                #     plt.show()
+                #
+                # if len(list_of_rewards) > 0:
+                #     plt.plot(list_of_rewards)
+                #     plt.show()
 
                 if len(list_of_scores) > 0:
                     x_values = []
@@ -546,8 +547,25 @@ class DQNLearning:
                     plt.scatter(x_values, list_of_scores)
                     plt.ylabel('Score')
                     plt.xlabel('Episodes')
+                    plt.title('Average Score During Training')
 
                     z = np.polyfit(x_values, list_of_scores, 1)
+                    p = np.poly1d(z)
+                    plt.plot(x_values, p(x_values), 'r--')
+
+                    plt.show()
+
+                if len(optimal_score_list) > 0:
+                    x_values = []
+                    for x in range(len(optimal_score_list)):
+                        x_values.append(x)
+
+                    plt.scatter(x_values, optimal_score_list)
+                    plt.ylabel('Score')
+                    plt.xlabel('Episodes')
+                    plt.title('Optimal Average Score')
+
+                    z = np.polyfit(x_values, optimal_score_list, 1)
                     p = np.poly1d(z)
                     plt.plot(x_values, p(x_values), 'r--')
 
@@ -701,7 +719,7 @@ class DQNLearning:
             print("Score on this episode: " + str(temp_score))
         return total_reward / num_of_times
 
-    def auto_evaluate(self, agent, num_of_times, epsilon=0.1):
+    def auto_evaluate_graph(self, agent, num_of_times, epsilon=0.1):
         total_reward = 0
         total_score = 0
         score_list = []
@@ -739,7 +757,69 @@ class DQNLearning:
         plt.plot(x_values, p(x_values), 'r--')
 
         plt.show()
-        return total_reward / num_of_times
+        return score_list
+
+    def auto_evaluate(self, agent, num_of_times):
+        total_reward = 0
+        total_score = 0
+        score_list = []
+        max_step_count = 500
+        for i in range(num_of_times):
+            self.q_was_pressed = False
+            self.x_was_pressed = False
+            self.env.reset()
+            step_count = 0
+            temp_score = 0
+            while not self.env.get_terminal_state():
+                if step_count > max_step_count:
+                    print("\t\t Auto Eval got stuck.")
+                    break
+                state = self.env.get_current_state()
+                state_list = [state]
+                max_action_number = agent.policy(state_list, debug=False)
+                action = convert_number_into_action(max_action_number)
+                next_state, reward, temp_done = self.env.step(action)
+                total_reward += reward
+                total_score += self.env.score
+                step_count += 1
+                temp_score = self.env.score
+            score_list.append(temp_score)
+        return np.mean(score_list)
+
+    def auto_evaluate_with_render(self, agent, num_of_times):
+        total_reward = 0
+        total_score = 0
+        score_list = []
+        max_step_count = 500
+
+        self.env.reset()
+        self.env.render()
+
+        if self.space_was_pressed():
+            for i in range(num_of_times):
+                self.q_was_pressed = False
+                self.x_was_pressed = False
+                self.env.reset()
+                self.env.render()
+                step_count = 0
+                temp_score = 0
+                while not self.env.get_terminal_state():
+                    if step_count > max_step_count:
+                        print("\t\t Auto Eval got stuck.")
+                        break
+                    state = self.env.get_current_state()
+                    state_list = [state]
+                    max_action_number = agent.policy(state_list, debug=False)
+                    action = convert_number_into_action(max_action_number)
+                    next_state, reward, temp_done = self.env.step(action)
+                    total_reward += reward
+                    total_score += self.env.score
+                    step_count += 1
+                    temp_score = self.env.score
+                    self.env.render()
+                    time.sleep(0.05)
+                score_list.append(temp_score)
+        return np.mean(score_list)
 
     def space_was_pressed(self):
         self.env.render()
