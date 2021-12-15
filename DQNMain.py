@@ -8,15 +8,17 @@ print("Creating model")
 env = SnakeEnv(grid_size=10)
 
 temp_learn = DQNLearning(env=env,
-                         target_name=str("SnakeEpisodic12Boolean10ThousandPlusDistanceReward"),
-                         episode_count=10000,
+                         # target_name=str("SnakeEpisodic12Boolean10ThousandPlusDistanceReward"),
+                         # target_name=str("SnakeEpisodic12Boolean10Thousand"),
+                         target_name=str("SnakeEpisodicGraphTest"),
+                         episode_count=100,
                          min_batch_size=500,
                          max_batch_size=-1,
                          epsilon=0.1,
-                         load_model=True,
+                         load_model=False,
                          fit_on_step=2,
-                         train=False,
-                         save_model=True,
+                         train=True,
+                         save_model=False,
                          show_graphs=True)
 
 print("Training model")

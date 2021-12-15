@@ -430,6 +430,7 @@ class DQNLearning:
 
             avg_rewards = []
             list_of_rewards = []
+            list_of_scores = []
 
             improvement_score = 0
             previous_improvement_score = 0
@@ -493,6 +494,8 @@ class DQNLearning:
                         break
                 # end episode loop
 
+                list_of_scores.append(self.env.score)
+
                 replay.store(states, actions, rewards, next_states)
 
                 buffer_data = replay.get_mini_batch(batch_size=10)
@@ -533,6 +536,21 @@ class DQNLearning:
 
                 if len(list_of_rewards) > 0:
                     plt.plot(list_of_rewards)
+                    plt.show()
+
+                if len(list_of_scores) > 0:
+                    x_values = []
+                    for x in range(len(list_of_scores)):
+                        x_values.append(x)
+
+                    plt.scatter(x_values, list_of_scores)
+                    plt.ylabel('Score')
+                    plt.xlabel('Episodes')
+
+                    z = np.polyfit(x_values, list_of_scores, 1)
+                    p = np.poly1d(z)
+                    plt.plot(x_values, p(x_values), 'r--')
+
                     plt.show()
 
             agent.model.summary()
@@ -705,7 +723,21 @@ class DQNLearning:
                 temp_score = self.env.score
             score_list.append(temp_score)
         time.sleep(0.1)
-        plt.plot(score_list)
+        # plt.plot(score_list)
+        # plt.show()
+
+        x_values = []
+        for x in range(len(score_list)):
+            x_values.append(x)
+
+        plt.scatter(x_values, score_list)
+        plt.ylabel('Score')
+        plt.xlabel('Episodes')
+
+        z = np.polyfit(x_values, score_list, 1)
+        p = np.poly1d(z)
+        plt.plot(x_values, p(x_values), 'r--')
+
         plt.show()
         return total_reward / num_of_times
 
