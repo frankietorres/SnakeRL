@@ -797,6 +797,7 @@ class DQNLearning:
 
         if self.space_was_pressed():
             for i in range(num_of_times):
+                pygame.event.pump()
                 self.q_was_pressed = False
                 self.x_was_pressed = False
                 self.env.reset()
@@ -804,6 +805,7 @@ class DQNLearning:
                 step_count = 0
                 temp_score = 0
                 while not self.env.get_terminal_state():
+                    pygame.event.pump()
                     if step_count > max_step_count:
                         print("\t\t Auto Eval got stuck.")
                         break
